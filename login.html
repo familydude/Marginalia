@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in — Marginalia</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>❦</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="login-body">
+  <main class="login">
+    <header class="masthead">
+      <p class="eyebrow">A private library</p>
+      <h1 class="wordmark">Marginalia</h1>
+      <div class="ornament" aria-hidden="true">❦</div>
+    </header>
+
+    <form id="login" class="login-card" autocomplete="on">
+      <input type="text" name="username" value="marginalia" autocomplete="username" hidden aria-hidden="true">
+      <label class="field" for="password">
+        <span>Password</span>
+        <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="remember" checked>
+        <span>Keep me signed in on this device</span>
+      </label>
+      <p class="login-error" id="error" role="alert"></p>
+      <button class="btn" type="submit" id="submit">Enter the library</button>
+    </form>
+
+    <p class="login-foot">Forgotten the password? It can be reset on the server; the README explains how.</p>
+  </main>
+
+  <script>
+    'use strict';
+    const form = document.getElementById('login');
+    const err = document.getElementById('error');
+    const btn = document.getElementById('submit');
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      err.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Opening…';
+      try {
+        const r = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            password: document.getElementById('password').value,
+            remember: document.getElementById('remember').checked,
+          }),
+        });
+        if (r.ok) {
+          // The fragment (#/p/…) survives the redirect to /login, so return to where we were.
+          location.replace('/' + location.hash);
+          return;
+        }
+        const data = await r.json().catch(() => ({}));
+        err.textContent = data.error || 'Something went wrong.';
+        const pw = document.getElementById('password');
+        pw.select();
+        form.classList.remove('shake');
+        void form.offsetWidth;
+        form.classList.add('shake');
+      } catch {
+        err.textContent = 'The server could not be reached.';
+      }
+      btn.disabled = false;
+      btn.textContent = 'Enter the library';
+    });
+  </script>
+</body>
+</html>

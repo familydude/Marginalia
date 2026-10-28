@@ -1,0 +1,27 @@
+services:
+  marginalia:
+    build: .
+    image: marginalia:latest
+    container_name: marginalia
+    restart: unless-stopped
+    # Run as your own user so the files in ./data belong to you on the host.
+    # Set UID/GID in .env if yours aren't 1000 (check with `id -u` and `id -g`).
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 4321
+      MARGINALIA_DATA: /data
+    ports:
+      # "4321:4321" makes it reachable from other devices on your network.
+      # Use "127.0.0.1:4321:4321" instead if a reverse proxy on this machine fronts it.
+      - "4321:4321"
+    volumes:
+      - ./data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
